@@ -39,10 +39,10 @@ def select(sql):
         print(cursor.description)
         print(results)
         print(data_dict)
+        return results
     except Exception as e:
         db.rollback()
         print(e)
-    return results
 
 
 data = (13, 'ss', 'sss', 2, 30)
