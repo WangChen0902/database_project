@@ -1,6 +1,7 @@
 import pymysql
+import datetime
 
-db = pymysql.connect('localhost', 'tester', '123456', 'supermarket')
+db = pymysql.connect('localhost', 'tester', '123456', 'supermarket', charset="utf8")
 cursor = db.cursor()
 
 
@@ -22,7 +23,7 @@ def insert(table, value):
               "values (%s, '%s', '%s')" % tuple(value)
     else:
         return
-
+    print(sql)
     try:
         cursor.execute(sql)
         db.commit()
@@ -42,7 +43,7 @@ def update(table, value, flag):
 
     if table == 'goods':
         sql = "update goods set amount = amount %s where gid = %s" % tuple(tmp)
-
+    print(sql)
     try:
         cursor.execute(sql)
         db.commit()
@@ -71,7 +72,6 @@ def select(table, value):
             sql = "select gid, sale_time, sale_amount, sale_price, total_price " \
                   "from sale_record " \
                   "where %s" % where_str
-        print(sql)
 
     if table == 'refresh':
         name_list = ["amount < %s"]
@@ -80,6 +80,13 @@ def select(table, value):
               "from goods " \
               "where %s" % where_str
 
+    if table == 'stock_record':
+        sql = "select gid, stock_time, stock_amount, stock_price, total_price " \
+              "from stock_record"
+
+    if table == 'off_record':
+        sql = "select gid, off_time, off_reason from off_record"
+    print(sql)
     try:
         cursor.execute(sql)
         results = cursor.fetchall()
@@ -87,6 +94,19 @@ def select(table, value):
         for field in cursor.description:
             data_dict.append(field[0])
         return results
+    except Exception as e:
+        db.rollback()
+        print(e)
+
+
+def delete(table, value):
+    sql = ''
+    if table == 'goods':
+        sql = "delete from goods where gid = %s" % tuple(value)
+    print(sql)
+    try:
+        cursor.execute(sql)
+        db.commit()
     except Exception as e:
         db.rollback()
         print(e)

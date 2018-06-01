@@ -1,8 +1,8 @@
 import sys
 import supermarket
 from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt
-
+import datetime
+import xlwt
 
 class Example(QWidget):
     def __init__(self):
@@ -18,6 +18,7 @@ class Example(QWidget):
         stock_grid = QGridLayout()
         new_grid = QGridLayout()
         bad_grid = QGridLayout()
+        manage_grid = QGridLayout()
 
         tab = QTabWidget()
         goods_widget = QWidget()
@@ -26,6 +27,7 @@ class Example(QWidget):
         stock_widget = QWidget()
         new_widget = QWidget()
         bad_widget = QWidget()
+        manage_widget = QWidget()
 
         goods_widget.setLayout(goods_grid)
         sale_widget.setLayout(sale_grid)
@@ -33,6 +35,7 @@ class Example(QWidget):
         stock_widget.setLayout(stock_grid)
         new_widget.setLayout(new_grid)
         bad_widget.setLayout(bad_grid)
+        manage_widget.setLayout(manage_grid)
 
         tab.addTab(goods_widget, '商品管理')
         tab.addTab(sale_widget, '售货查询')
@@ -40,6 +43,7 @@ class Example(QWidget):
         tab.addTab(stock_widget, '商品进货')
         tab.addTab(new_widget, '新品上市')
         tab.addTab(bad_widget, '下架商品')
+        tab.addTab(manage_widget, '导出记录')
         main_grid.addWidget(tab)
 
         # <editor-fold desc="Init goods_widget">
@@ -139,7 +143,7 @@ class Example(QWidget):
 
         label_sell = list()
         label_sell.append(QLabel('产品编号'))
-        label_sell.append(QLabel('销售时间'))
+        label_sell.append(QLabel('销售日期'))
         label_sell.append(QLabel('数量'))
         label_sell.append(QLabel('单价'))
 
@@ -147,7 +151,7 @@ class Example(QWidget):
         self.table_sell = QTableWidget(128, 6)
         self.table_sell.setEditTriggers(QTableWidget.NoEditTriggers)
 
-        horizontal_head_sell = ['记录编号', '产品编号', '销售时间', '数量', '单价', '总价']
+        horizontal_head_sell = ['记录编号', '产品编号', '销售日期', '数量', '单价', '总价']
         self.table_sell.setHorizontalHeaderLabels(horizontal_head_sell)
 
         sub_grid_sell.addWidget(label_sell[0], 0, 0)
@@ -174,7 +178,7 @@ class Example(QWidget):
 
         label_stock = list()
         label_stock.append(QLabel('产品编号'))
-        label_stock.append(QLabel('进货时间'))
+        label_stock.append(QLabel('进货日期'))
         label_stock.append(QLabel('数量'))
         label_stock.append(QLabel('单价'))
 
@@ -206,7 +210,7 @@ class Example(QWidget):
         sub_grid_new.setSpacing(10)
 
         self.edit_new = list()
-        for i in range(10):
+        for i in range(11):
             self.edit_new.append(QLineEdit())
 
         label_new = list()
@@ -220,13 +224,15 @@ class Example(QWidget):
         label_new.append(QLabel('服装人群'))
         label_new.append(QLabel('食品保质期'))
         label_new.append(QLabel('食品产地'))
+        label_new.append(QLabel('进货日期'))
 
+        btn_restock = QPushButton('查询进货记录')
         btn_clothes = QPushButton('服装进货')
         btn_food = QPushButton('食品进货')
         self.table_new = QTableWidget(128, 5)
         self.table_new.setEditTriggers(QTableWidget.NoEditTriggers)
 
-        horizontal_head_new = ['产品编号', '产品名称', '生产公司', '单价', '剩余数量']
+        horizontal_head_new = ['产品编号', '进货时间', '进货数量', '单价', '总价']
         self.table_new.setHorizontalHeaderLabels(horizontal_head_new)
 
         sub_grid_new.addWidget(label_new[0], 0, 0)
@@ -249,11 +255,67 @@ class Example(QWidget):
         sub_grid_new.addWidget(self.edit_new[8], 2, 5)
         sub_grid_new.addWidget(label_new[9], 3, 0)
         sub_grid_new.addWidget(self.edit_new[9], 3, 1)
-        sub_grid_new.addWidget(btn_clothes, 3, 3)
-        sub_grid_new.addWidget(btn_food, 3, 5)
+        sub_grid_new.addWidget(label_new[10], 3, 2)
+        sub_grid_new.addWidget(self.edit_new[10], 3, 3)
+        sub_grid_new.addWidget(btn_restock, 4, 1)
+        sub_grid_new.addWidget(btn_clothes, 4, 3)
+        sub_grid_new.addWidget(btn_food, 4, 5)
 
         new_grid.addLayout(sub_grid_new, 0, 0)
         new_grid.addWidget(self.table_new, 1, 0)
+        # </editor-fold>
+
+        # <editor-fold desc="Init bad_widget">
+        sub_grid_bad = QGridLayout()
+        sub_grid_bad.setSpacing(10)
+
+        self.edit_bad = list()
+        for i in range(3):
+            self.edit_bad.append(QLineEdit())
+
+        label_bad = list()
+        label_bad.append(QLabel('产品编号'))
+        label_bad.append(QLabel('下架日期'))
+        label_bad.append(QLabel('下架原因'))
+
+        btn_bad = QPushButton('下架')
+        btn_off = QPushButton('查询下架信息')
+        self.table_bad = QTableWidget(128, 3)
+        self.table_bad.setEditTriggers(QTableWidget.NoEditTriggers)
+
+        horizontal_head_bad = ['产品编号', '下架日期', '下架原因']
+        self.table_bad.setHorizontalHeaderLabels(horizontal_head_bad)
+
+        sub_grid_bad.addWidget(label_bad[0], 0, 0)
+        sub_grid_bad.addWidget(self.edit_bad[0], 0, 1)
+        sub_grid_bad.addWidget(label_bad[1], 0, 2)
+        sub_grid_bad.addWidget(self.edit_bad[1], 0, 3)
+        sub_grid_bad.addWidget(label_bad[2], 1, 0)
+        sub_grid_bad.addWidget(self.edit_bad[2], 1, 1)
+        sub_grid_bad.addWidget(btn_off, 1, 2)
+        sub_grid_bad.addWidget(btn_bad, 1, 3)
+
+        bad_grid.addLayout(sub_grid_bad, 0, 0)
+        bad_grid.addWidget(self.table_bad, 1, 0)
+        # </editor-fold>
+
+        # <editor-fold desc="Init manage_widget">
+        btn_day = QPushButton('统计本日销售记录')
+        btn_week = QPushButton('统计本周销售记录')
+        btn_month = QPushButton('统计本月销售记录')
+        btn_season = QPushButton('统计本季销售记录')
+        btn_year = QPushButton('统计本年销售记录')
+        btn_day.setFixedSize(160, 50)
+        btn_week.setFixedSize(160, 50)
+        btn_month.setFixedSize(160, 50)
+        btn_season.setFixedSize(160, 50)
+        btn_year.setFixedSize(160, 50)
+
+        manage_grid.addWidget(btn_day, 0, 1)
+        manage_grid.addWidget(btn_week, 1, 1)
+        manage_grid.addWidget(btn_month, 2, 1)
+        manage_grid.addWidget(btn_season, 3, 1)
+        manage_grid.addWidget(btn_year, 4, 1)
         # </editor-fold>
 
         btn.clicked.connect(self.on_click_btn1)
@@ -261,11 +323,22 @@ class Example(QWidget):
         btn_sell.clicked.connect(self.on_click_btn3)
         btn_stock.clicked.connect(self.on_click_btn4)
         btn_refresh.clicked.connect(self.on_click_btn5)
+        btn_clothes.clicked.connect(self.on_click_btn6)
+        btn_food.clicked.connect(self.on_click_btn7)
+        btn_restock.clicked.connect(self.on_click_btn8)
+        btn_bad.clicked.connect(self.on_click_btn9)
+        btn_off.clicked.connect(self.on_click_btn10)
+        btn_day.clicked.connect(self.on_click_day)
+        btn_week.clicked.connect(self.on_click_week)
+        btn_month.clicked.connect(self.on_click_month)
+        btn_season.clicked.connect(self.on_click_season)
+        btn_year.clicked.connect(self.on_click_year)
 
-        self.setGeometry(100, 100, 600, 600)
+        self.setGeometry(100, 100, 1024, 768)
         self.setWindowTitle("Test")
         self.show()
 
+    # <editor-fold desc="Button functions">
     def on_click_btn1(self):
         self.table.clearContents()
         l2 = list()
@@ -319,7 +392,6 @@ class Example(QWidget):
         for i in self.edit_stock:
             l2.append(i.text())
         l2.append(str(int(l2[2])*int(l2[3])))
-        print(l2)
         supermarket.insert('stock_record', l2)
         supermarket.update('goods', [l2[0], l2[2]], True)
 
@@ -334,6 +406,108 @@ class Example(QWidget):
                     r = result[i][j].toString()
                 item = QTableWidgetItem(r)
                 self.table_stock.setItem(i, j, item)
+
+    def on_click_btn6(self):
+        l2 = list()
+        for i in self.edit_new:
+            l2.append(i.text())
+        l2.append(str(int(l2[3])*int(l2[4])))
+        supermarket.insert('goods', l2[0:5])
+        supermarket.insert('clothes_goods', [l2[0]]+l2[5:8])
+        supermarket.insert('stock_record', [l2[0], l2[10], l2[4], l2[3], l2[11]])
+
+    def on_click_btn7(self):
+        l2 = list()
+        for i in self.edit_new:
+            l2.append(i.text())
+        l2.append(str(int(l2[3])*int(l2[4])))
+        supermarket.insert('goods', l2[0:5])
+        supermarket.insert('food_goods', [l2[0]]+l2[8:10])
+        supermarket.insert('stock_record', [l2[0], l2[10], l2[4], l2[3], l2[11]])
+
+    def on_click_btn8(self):
+        self.table_new.clearContents()
+        result = supermarket.select('stock_record', '*')
+        for i in range(len(result)):
+            for j in range(len(result[i])):
+                if type(result[i][j] == int):
+                    r = str(result[i][j])
+                else:
+                    r = result[i][j].toString()
+                item = QTableWidgetItem(r)
+                self.table_new.setItem(i, j, item)
+
+    def on_click_btn9(self):
+        self.table_bad.clearContents()
+        l2 = list()
+        for i in self.edit_bad:
+            l2.append(i.text())
+        supermarket.insert('off_record', l2)
+        result = supermarket.select('off_record', '*')
+        supermarket.delete('goods', l2[0])
+        for i in range(len(result)):
+            for j in range(len(result[i])):
+                if type(result[i][j] == int):
+                    r = str(result[i][j])
+                else:
+                    r = result[i][j].toString()
+                item = QTableWidgetItem(r)
+                self.table_bad.setItem(i, j, item)
+
+    def on_click_btn10(self):
+        self.table_bad.clearContents()
+        l2 = list()
+        for i in self.edit_bad:
+            l2.append(i.text())
+        result = supermarket.select('off_record', '*')
+        for i in range(len(result)):
+            for j in range(len(result[i])):
+                if type(result[i][j] == int):
+                    r = str(result[i][j])
+                else:
+                    r = result[i][j].toString()
+                item = QTableWidgetItem(r)
+                self.table_bad.setItem(i, j, item)
+
+    def on_click_day(self):
+        self.get_record(datetime.datetime.now().strftime('%Y-%m-%d'), 'day')
+
+    def on_click_week(self):
+        self.get_record((datetime.datetime.now()-datetime.timedelta(days=6)).strftime('%Y-%m-%d'), 'week')
+
+    def on_click_month(self):
+        d = datetime.datetime.now()
+        self.get_record((datetime.date(d.year, d.month, 1)).strftime('%Y-%m-%d'), 'month')
+
+    def on_click_season(self):
+        d = datetime.datetime.now()
+        self.get_record((datetime.date(d.year, d.month - 3, 1)).strftime('%Y-%m-%d'), 'season')
+
+    def on_click_year(self):
+        d = datetime.datetime.now()
+        self.get_record((datetime.date(d.year, 1, 1)).strftime('%Y-%m-%d'), 'year')
+
+    def get_record(self, date, value):
+        l2 = list()
+        head_sale = ['产品编号', '销售日期', '销售数量', '单价', '总价']
+        l2.append('')
+        l2.append(date)
+        l2.append(datetime.datetime.now().strftime('%Y-%m-%d'))
+        result = supermarket.select('sale', l2)
+        workbook = xlwt.Workbook(encoding='utf-8')
+        booksheet = workbook.add_sheet('Day', cell_overwrite_ok=True)
+        for i in range(5):
+            booksheet.write(0, i, head_sale[i])
+        for i, row in enumerate(result):
+            for j, col in enumerate(row):
+                if type(result[i][j] == int):
+                    booksheet.write(i + 1, j, str(col))
+                else:
+                    booksheet.write(i + 1, j, col.toString())
+        print('%s.xlsx' % value)
+        workbook.save('%s.xlsx' % value)
+
+    # </editor-fold>
 
 
 if __name__ == "__main__":
